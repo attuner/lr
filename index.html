@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Autonomous Radio Scheduler</title>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  
+  <style>
+    :root {
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --bg: #030712;
+      --card-bg: rgba(17, 24, 39, 0.85);
+      --text: #f9fafb;
+      --text-muted: #9ca3af;
+      --border: rgba(255, 255, 255, 0.1);
+      --accent-edit: #eab308;
+      --accent-del: #ef4444;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body, html {
+      width: 100%;
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      overflow: hidden;
+    }
+
+    #stage {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: radial-gradient(circle at center, #111827 0%, #030712 100%);
+    }
+
+    #visualizer-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+
+    #station-card {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      background: var(--card-bg);
+      padding: 40px 60px;
+      border-radius: 24px;
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+      max-width: 640px;
+      width: 90%;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      background: rgba(59, 130, 246, 0.15);
+      color: #60a5fa;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+
+    #station-title {
+      font-size: 2.2rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    #station-meta {
+      font-size: 1rem;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+    }
+
+    .bars-container {
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      height: 30px;
+      gap: 5px;
+    }
+
+    .bar {
+      width: 4px;
+      background: var(--primary);
+      border-radius: 2px;
+      animation: equalize 1s infinite ease-in-out alternate;
+    }
+
+    .bar:nth-child(1) { height: 40%; animation-delay: 0.1s; }
+    .bar:nth-child(2) { height: 80%; animation-delay: 0.3s; }
+    .bar:nth-child(3) { height: 100%; animation-delay: 0.2s; }
+    .bar:nth-child(4) { height: 60%; animation-delay: 0.4s; }
+    .bar:nth-child(5) { height: 30%; animation-delay: 0.5s; }
+
+    @keyframes equalize {
+      0% { transform: scaleY(0.3); }
+      100% { transform: scaleY(1); }
+    }
+
+    #remote-btn-toggle {
+      position: absolute;
+      top: 24px;
+      right: 24px;
+      z-index: 10;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 10px 18px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      backdrop-filter: blur(8px);
+      transition: background 0.2s;
+    }
+
+    #remote-btn-toggle:hover {
+      background: rgba(31, 41, 55, 0.9);
+    }
+
+    #remote-drawer {
+      position: fixed;
+      top: 0;
+      right: -480px;
+      width: 460px;
+      height: 100%;
+      background: #111827;
+      border-left: 1px solid var(--border);
+      box-shadow: -10px 0 30px rgba(0,0,0,0.7);
+      z-index: 50;
+      display: flex;
+      flex-direction: column;
+      transition: right 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    #remote-drawer.open {
+      right: 0;
+    }
+
+    .remote-header {
+      padding: 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .remote-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+    }
+
+    .remote-section-title {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    .station-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 24px;
+      max-height: 280px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .station-item {
+      background: #1f2937;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    .station-item.active {
+      border-color: var(--primary);
+      background: rgba(59, 130, 246, 0.15);
+    }
+
+    .station-item:hover {
+      background: #374151;
+    }
+
+    .station-info h4 {
+      font-size: 0.9rem;
+      margin-bottom: 2px;
+    }
+
+    .station-info span {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .item-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .action-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .action-btn.edit:hover {
+      color: #facc15;
+      border-color: #facc15;
+    }
+
+    .action-btn.delete:hover {
+      color: #f87171;
+      border-color: #f87171;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .input-group label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .input-group input, .input-group select {
+      background: #1f2937;
+      border: 1px solid var(--border);
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 6px;
+      outline: none;
+    }
+
+    .input-group input:focus, .input-group select:focus {
+      border-color: var(--primary);
+    }
+
+    .form-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn {
+      padding: 10px 16px;
+      border-radius: 8px;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: background 0.2s;
+    }
+
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-secondary { background: #374151; color: #fff; }
+    .btn-secondary:hover { background: #4b5563; }
+    .btn-cancel { background: #4b5563; color: #fff; }
+
+    #start-overlay {
+      position: fixed;
+      inset: 0;
+      background: #030712;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="stage">
+    <canvas id="visualizer-canvas"></canvas>
+
+    <button id="remote-btn-toggle" onclick="toggleRemote()">
+      <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+      Remote Control
+    </button>
+
+    <div id="station-card">
+      <span class="badge" id="stream-status">AUTOPILOT SCHEDULER</span>
+      <h1 id="station-title">Loading Stream...</h1>
+      <p id="station-meta">Synchronizing schedule...</p>
+
+      <div class="bars-container">
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+        <div class="bar"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Remote Drawer -->
+  <div id="remote-drawer">
+    <div class="remote-header">
+      <h3>Remote Management</h3>
+      <button class="btn btn-secondary" style="padding: 4px 8px;" onclick="toggleRemote()">✕</button>
+    </div>
+
+    <div class="remote-content">
+      <div class="remote-section-title">Schedule Timetable</div>
+      <div class="station-list" id="remote-station-list"></div>
+
+      <div class="remote-section-title" id="form-heading">Add New Station</div>
+      <form id="station-form" onsubmit="handleFormSubmit(event)">
+        <input type="hidden" id="edit-index" value="-1" />
+        
+        <div class="form-row">
+          <div class="input-group" style="flex:1;">
+            <label>Start (HH:mm)</label>
+            <input type="text" id="inp-start" placeholder="08:00" required pattern="([01]?[0-9]|2[0-3]):[0-5][0-9]" />
+          </div>
+          <div class="input-group" style="flex:1;">
+            <label>End (HH:mm)</label>
+            <input type="text" id="inp-end" placeholder="12:00" required pattern="([01]?[0-9]|2[0-3]):[0-5][0-9]" />
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>Station Name</label>
+          <input type="text" id="inp-title" placeholder="e.g. AIR Vividh Bharati" required />
+        </div>
+
+        <div class="form-row">
+          <div class="input-group" style="flex:1;">
+            <label>Category</label>
+            <select id="inp-category">
+              <option value="News">News</option>
+              <option value="Learning">Learning & Talks</option>
+              <option value="Entertainment">Entertainment & Music</option>
+            </select>
+          </div>
+          <div class="input-group" style="flex:1;">
+            <label>Language</label>
+            <input type="text" id="inp-lang" placeholder="e.g. Telugu / English" />
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>Stream URL (.mp3, .aac, .m3u8)</label>
+          <input type="url" id="inp-url" placeholder="https://..." required />
+        </div>
+
+        <div style="display:flex; gap: 8px; margin-top: 14px;">
+          <button type="submit" id="submit-btn" class="btn btn-primary" style="flex:1;">Add to Schedule</button>
+          <button type="button" id="cancel-edit-btn" class="btn btn-cancel" style="display:none;" onclick="cancelEditing()">Cancel</button>
+          <button type="button" class="btn btn-secondary" onclick="syncWithGoogleSheet()">Sync Sheet</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <audio id="radio-core" crossorigin="anonymous"></audio>
+
+  <div id="start-overlay">
+    <button class="btn btn-primary" style="padding: 16px 36px; font-size: 1.1rem;" id="init-btn">
+      Start Autonomous Radio Player
+    </button>
+  </div>
+
+  <script>
+    const CONFIG_APPS_SCRIPT_URL = "hhttps://script.google.com/macros/s/AKfycbwhlbDHvLzEWiJlk71dQvCOrx4BxY4efPolvHoIkgS5zXQZTmyA6PJflIeGOtbCN8Ietw/exec";
+
+    // 20+ Built-in fallbacks across News, Learning, and Entertainment
+    const DEFAULT_SCHEDULE = [
+      { startTime: "05:00", endTime: "06:00", title: "AIR News 24x7 (India)", category: "News", language: "Hindi/English", url: "https://air.pc.cdn.bitgravity.com/air/live/pcradio/pub/allindianews/playlist.m3u8" },
+      { startTime: "06:00", endTime: "07:00", title: "LBC News London", category: "News", language: "English", url: "https://media-ice.musicradio.com/LBCNewsUKMP3" },
+      { startTime: "07:00", endTime: "08:00", title: "BBC World Service", category: "News", language: "English", url: "https://stream.live.vc.bbcmedia.co.uk/bbc_world_service" },
+      { startTime: "08:00", endTime: "09:00", title: "NPR News 24 Hour", category: "News", language: "English", url: "https://npr-ice.streamguys1.com/live.mp3" },
+      { startTime: "09:00", endTime: "10:00", title: "Bloomberg Radio", category: "News", language: "English", url: "https://bbg-ice.streamguys1.com/live-mp3" },
+
+      { startTime: "10:00", endTime: "11:00", title: "AIR Hyderabad (Telangana)", category: "Entertainment", language: "Telugu", url: "https://air.pc.cdn.bitgravity.com/air/live/pcradio/pub/airtelugu/playlist.m3u8" },
+      { startTime: "11:00", endTime: "12:00", title: "Radio City Telugu", category: "Entertainment", language: "Telugu", url: "https://prclive4.listen2myradio.com/live.mp3?type=s1&mount=/8136" },
+      { startTime: "12:00", endTime: "13:00", title: "Telugu NRI Radio", category: "Entertainment", language: "Telugu", url: "https://stream.zeno.fm/f3wvbbk8v18uv" },
+      { startTime: "13:00", endTime: "14:00", title: "Hungama Telugu Hits", category: "Entertainment", language: "Telugu", url: "https://stream.zeno.fm/2w3x84y12reuv" },
+      { startTime: "14:00", endTime: "15:00", title: "AIR Vividh Bharati", category: "Entertainment", language: "Hindi", url: "https://air.pc.cdn.bitgravity.com/air/live/pcradio/pub/vividhbharati/playlist.m3u8" },
+
+      { startTime: "15:00", endTime: "16:00", title: "BBC Radio 4 (Science & Arts)", category: "Learning", language: "English", url: "https://stream.live.vc.bbcmedia.co.uk/bbc_radio_fourfm" },
+      { startTime: "16:00", endTime: "17:00", title: "WNYC AM (Podcasts & Debate)", category: "Learning", language: "English", url: "https://fm939.wnyc.org/wnycfm-web" },
+      { startTime: "17:00", endTime: "18:00", title: "KEXP Discovery & Learning", category: "Learning", language: "English", url: "https://kexp.streamguys1.com/kexp160.aac" },
+      { startTime: "18:00", endTime: "19:00", title: "KQED Public Radio Talks", category: "Learning", language: "English", url: "https://streams.kqed.org/kqedradio.mp3" },
+
+      { startTime: "19:00", endTime: "20:00", title: "Capital FM UK (Hit Music)", category: "Entertainment", language: "English", url: "https://media-ice.musicradio.com/CapitalMP3" },
+      { startTime: "20:00", endTime: "21:00", title: "Heart UK (80s & 90s Hits)", category: "Entertainment", language: "English", url: "https://media-ice.musicradio.com/HeartUKMP3" },
+      { startTime: "21:00", endTime: "22:00", title: "AIR Raagam (Indian Classical)", category: "Entertainment", language: "Carnatic/Hindustani", url: "https://air.pc.cdn.bitgravity.com/air/live/pcradio/pub/airragam/playlist.m3u8" },
+      { startTime: "22:00", endTime: "23:00", title: "Smooth Radio UK", category: "Entertainment", language: "English", url: "https://media-ice.musicradio.com/SmoothUKMP3" },
+      { startTime: "23:00", endTime: "00:00", title: "Classic FM London", category: "Entertainment", language: "English", url: "https://media-ice.musicradio.com/ClassicFMMP3" },
+      { startTime: "00:00", endTime: "02:00", title: "SomaFM Groove Salad", category: "Entertainment", language: "English", url: "https://ice1.somafm.com/groovesalad-128-mp3" },
+      { startTime: "02:00", endTime: "05:00", title: "Jazz24 (Global Standards)", category: "Entertainment", language: "English", url: "https://live.wostreaming.net/manifest/ppm-jazz24aac-ibc1.m3u8" }
+    ];
+
+    let schedule = [];
+    let activeChannel = null;
+    let manualOverride = false;
+    let hlsInstance = null;
+    let audioCtx, analyser, dataArray;
+
+    const audio = document.getElementById("radio-core");
+    const stationTitleEl = document.getElementById("station-title");
+    const stationMetaEl = document.getElementById("station-meta");
+    const streamStatusEl = document.getElementById("stream-status");
+    const remoteDrawer = document.getElementById("remote-drawer");
+    const remoteList = document.getElementById("remote-station-list");
+
+    // Visualizer
+    function initVisualizer() {
+      const canvas = document.getElementById("visualizer-canvas");
+      const ctx = canvas.getContext("2d");
+
+      function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+      resize();
+      window.addEventListener("resize", resize);
+
+      try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AudioContext();
+        analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 128;
+        const source = audioCtx.createMediaElementSource(audio);
+        source.connect(analyser);
+        analyser.connect(audioCtx.destination);
+        dataArray = new Uint8Array(analyser.frequencyBinCount);
+      } catch (e) {
+        console.warn("Visualizer audio context restricted:", e);
+      }
+
+      function draw() {
+        requestAnimationFrame(draw);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        if (!analyser) return;
+        analyser.getByteFrequencyData(dataArray);
+
+        const cx = canvas.width / 2;
+        const cy = canvas.height / 2;
+        const radius = Math.min(cx, cy) * 0.45;
+        const bars = dataArray.length;
+
+        for (let i = 0; i < bars; i++) {
+          const val = dataArray[i];
+          const rad = (Math.PI * 2 / bars) * i;
+          const barHeight = (val / 255) * 80;
+
+          const x1 = cx + Math.cos(rad) * radius;
+          const y1 = cy + Math.sin(rad) * radius;
+          const x2 = cx + Math.cos(rad) * (radius + barHeight);
+          const y2 = cy + Math.sin(rad) * (radius + barHeight);
+
+          ctx.strokeStyle = `rgba(59, 130, 246, ${val / 300})`;
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(x1, y1);
+          ctx.lineTo(x2, y2);
+          ctx.stroke();
+        }
+      }
+      draw();
+    }
+
+    function toMinutes(t) {
+      if (!t) return 0;
+      const parts = t.toString().trim().split(":");
+      return (parseInt(parts[0], 10) || 0) * 60 + (parseInt(parts[1], 10) || 0);
+    }
+
+    function getScheduledChannel() {
+      const now = new Date();
+      const current = now.getHours() * 60 + now.getMinutes();
+
+      return schedule.find(item => {
+        const start = toMinutes(item.startTime);
+        const end = toMinutes(item.endTime);
+        if (start < end) return current >= start && current < end;
+        if (start > end) return current >= start || current < end;
+        return true;
+      }) || schedule[0];
+    }
+
+    function playStream(station, isManual = false) {
+      if (!station) return;
+      activeChannel = station;
+      manualOverride = isManual;
+
+      stationTitleEl.innerText = station.title;
+      stationMetaEl.innerText = `${station.startTime} - ${station.endTime} | ${station.category || "General"} | ${station.language || "English"}`;
+      streamStatusEl.innerText = isManual ? "MANUAL OVERRIDE" : "AUTOPILOT SCHEDULER";
+
+      if (hlsInstance) {
+        hlsInstance.destroy();
+        hlsInstance = null;
+      }
+      audio.pause();
+      audio.removeAttribute("src");
+
+      if (station.url.includes(".m3u8") && Hls.isSupported()) {
+        hlsInstance = new Hls();
+        hlsInstance.loadSource(station.url);
+        hlsInstance.attachMedia(audio);
+        hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => audio.play().catch(() => {}));
+      } else {
+        audio.src = station.url;
+        audio.play().catch(e => console.warn("Playback blocked or failed:", e));
+      }
+
+      renderRemoteList();
+    }
+
+    function evaluateSchedule() {
+      if (manualOverride) return;
+      const scheduled = getScheduledChannel();
+      if (scheduled && (!activeChannel || activeChannel.url !== scheduled.url)) {
+        playStream(scheduled, false);
+      }
+    }
+
+    async function loadSchedule() {
+      try {
+        const res = await fetch(CONFIG_APPS_SCRIPT_URL);
+        const data = await res.json();
+        if (data.channels && data.channels.length > 0) {
+          schedule = data.channels;
+        } else {
+          schedule = DEFAULT_SCHEDULE;
+        }
+      } catch (err) {
+        console.warn("Apps Script unreachable, using built-in list:", err);
+        schedule = DEFAULT_SCHEDULE;
+      }
+      renderRemoteList();
+      evaluateSchedule();
+    }
+
+    function toggleRemote() {
+      remoteDrawer.classList.toggle("open");
+    }
+
+    function renderRemoteList() {
+      remoteList.innerHTML = "";
+      schedule.forEach((item, index) => {
+        const el = document.createElement("div");
+        el.className = `station-item ${activeChannel && activeChannel.url === item.url ? "active" : ""}`;
+        el.innerHTML = `
+          <div class="station-info" style="flex:1;">
+            <h4>${item.title}</h4>
+            <span>${item.startTime} - ${item.endTime} • ${item.category || ""} • ${item.language || ""}</span>
+          </div>
+          <div class="item-actions">
+            <button class="action-btn edit" title="Edit this station" onclick="event.stopPropagation(); startEditing(${index})">✏️</button>
+            <button class="action-btn delete" title="Remove" onclick="event.stopPropagation(); removeStation(${index})">✕</button>
+          </div>
+        `;
+        el.onclick = () => playStream(item, true);
+        remoteList.appendChild(el);
+      });
+    }
+
+    // Schedule Editing Workflows
+    function startEditing(index) {
+      const station = schedule[index];
+      document.getElementById("edit-index").value = index;
+      document.getElementById("inp-start").value = station.startTime;
+      document.getElementById("inp-end").value = station.endTime;
+      document.getElementById("inp-title").value = station.title;
+      document.getElementById("inp-category").value = station.category || "Entertainment";
+      document.getElementById("inp-lang").value = station.language || "English";
+      document.getElementById("inp-url").value = station.url;
+
+      document.getElementById("form-heading").innerText = `Edit: ${station.title}`;
+      document.getElementById("submit-btn").innerText = "Update Station";
+      document.getElementById("cancel-edit-btn").style.display = "inline-block";
+    }
+
+    function cancelEditing() {
+      document.getElementById("edit-index").value = "-1";
+      document.getElementById("station-form").reset();
+      document.getElementById("form-heading").innerText = "Add New Station";
+      document.getElementById("submit-btn").innerText = "Add to Schedule";
+      document.getElementById("cancel-edit-btn").style.display = "none";
+    }
+
+    function removeStation(index) {
+      if (document.getElementById("edit-index").value == index) {
+        cancelEditing();
+      }
+      schedule.splice(index, 1);
+      renderRemoteList();
+    }
+
+    function handleFormSubmit(e) {
+      e.preventDefault();
+      const editIdx = parseInt(document.getElementById("edit-index").value, 10);
+      const stationData = {
+        startTime: document.getElementById("inp-start").value.trim(),
+        endTime: document.getElementById("inp-end").value.trim(),
+        title: document.getElementById("inp-title").value.trim(),
+        category: document.getElementById("inp-category").value,
+        language: document.getElementById("inp-lang").value.trim(),
+        url: document.getElementById("inp-url").value.trim()
+      };
+
+      if (editIdx >= 0) {
+        schedule[editIdx] = stationData;
+      } else {
+        schedule.push(stationData);
+      }
+
+      schedule.sort((a, b) => toMinutes(a.startTime) - toMinutes(b.startTime));
+      cancelEditing();
+      renderRemoteList();
+    }
+
+    async function syncWithGoogleSheet() {
+      try {
+        streamStatusEl.innerText = "SAVING TO GOOGLE SHEET...";
+        await fetch(CONFIG_APPS_SCRIPT_URL, {
+          method: "POST",
+          body: JSON.stringify({ channels: schedule })
+        });
+        streamStatusEl.innerText = "SHEET UPDATED";
+        setTimeout(evaluateSchedule, 2000);
+      } catch (err) {
+        alert("Could not sync with Google Apps Script: " + err.message);
+      }
+    }
+
+    // App Bootstrapping
+    document.getElementById("init-btn").addEventListener("click", async () => {
+      document.getElementById("start-overlay").style.display = "none";
+
+      const elem = document.documentElement;
+      if (elem.requestFullscreen) elem.requestFullscreen().catch(() => {});
+
+      initVisualizer();
+      if (audioCtx && audioCtx.state === "suspended") {
+        await audioCtx.resume();
+      }
+
+      await loadSchedule();
+      setInterval(evaluateSchedule, 5000);
+    });
+  </script>
+</body>
+</html>
