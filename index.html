@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>Autonomous Radio Scheduler</title>
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   
@@ -11,12 +11,11 @@
       --primary: #3b82f6;
       --primary-hover: #2563eb;
       --bg: #030712;
-      --card-bg: rgba(17, 24, 39, 0.85);
+      --card-bg: rgba(17, 24, 39, 0.88);
       --text: #f9fafb;
       --text-muted: #9ca3af;
-      --border: rgba(255, 255, 255, 0.1);
-      --accent-edit: #eab308;
-      --accent-del: #ef4444;
+      --border: rgba(255, 255, 255, 0.12);
+      --focus-ring: #60a5fa;
     }
 
     * {
@@ -24,35 +23,44 @@
       margin: 0;
       padding: 0;
       user-select: none;
+      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
     }
 
-    body, html {
-      width: 100%;
-      height: 100%;
+    html, body {
+      width: 100vw;
+      width: 100dvw;
+      height: 100vh;
+      height: 100dvh;
+      position: fixed;
+      inset: 0;
       background: var(--bg);
       color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       overflow: hidden;
+      overscroll-behavior: none;
     }
 
     #stage {
-      position: relative;
-      width: 100vw;
-      height: 100vh;
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
       background: radial-gradient(circle at center, #111827 0%, #030712 100%);
+      padding: 16px;
     }
 
     #visualizer-canvas {
       position: absolute;
-      top: 0;
-      left: 0;
+      inset: 0;
       width: 100%;
       height: 100%;
       z-index: 1;
+      pointer-events: none;
     }
 
     #station-card {
@@ -60,13 +68,14 @@
       z-index: 2;
       text-align: center;
       background: var(--card-bg);
-      padding: 40px 60px;
+      padding: clamp(24px, 5vh, 48px) clamp(20px, 5vw, 64px);
       border-radius: 24px;
       backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
       border: 1px solid var(--border);
       box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
       max-width: 640px;
-      width: 90%;
+      width: 92%;
     }
 
     .badge {
@@ -84,7 +93,7 @@
     }
 
     #station-title {
-      font-size: 2.2rem;
+      font-size: clamp(1.4rem, 4vw, 2.2rem);
       font-weight: 700;
       margin-bottom: 8px;
       white-space: nowrap;
@@ -93,9 +102,10 @@
     }
 
     #station-meta {
-      font-size: 1rem;
+      font-size: clamp(0.85rem, 2vw, 1rem);
       color: var(--text-muted);
       margin-bottom: 24px;
+      word-break: break-word;
     }
 
     .bars-container {
@@ -126,8 +136,8 @@
 
     #remote-btn-toggle {
       position: absolute;
-      top: 24px;
-      right: 24px;
+      top: max(16px, env(safe-area-inset-top));
+      right: max(16px, env(safe-area-inset-right));
       z-index: 10;
       background: var(--card-bg);
       border: 1px solid var(--border);
@@ -140,19 +150,27 @@
       align-items: center;
       gap: 8px;
       backdrop-filter: blur(8px);
-      transition: background 0.2s;
+      -webkit-backdrop-filter: blur(8px);
+      transition: background 0.2s, outline 0.2s;
     }
 
-    #remote-btn-toggle:hover {
-      background: rgba(31, 41, 55, 0.9);
+    #remote-btn-toggle:focus-visible, 
+    .btn:focus-visible,
+    .station-item:focus-visible,
+    .action-btn:focus-visible,
+    .tv-scroll-btn:focus-visible {
+      outline: 3px solid var(--focus-ring);
+      outline-offset: 2px;
     }
 
     #remote-drawer {
       position: fixed;
       top: 0;
-      right: -480px;
-      width: 460px;
+      bottom: 0;
+      right: -520px;
+      width: min(480px, 100vw);
       height: 100%;
+      height: 100dvh;
       background: #111827;
       border-left: 1px solid var(--border);
       box-shadow: -10px 0 30px rgba(0,0,0,0.7);
@@ -167,7 +185,7 @@
     }
 
     .remote-header {
-      padding: 20px;
+      padding: 16px 20px;
       border-bottom: 1px solid var(--border);
       display: flex;
       justify-content: space-between;
@@ -177,25 +195,58 @@
     .remote-content {
       flex: 1;
       overflow-y: auto;
-      padding: 20px;
+      padding: 16px 20px;
     }
 
     .remote-section-title {
-      font-size: 0.85rem;
+      font-size: 0.82rem;
       text-transform: uppercase;
       letter-spacing: 0.05em;
       color: var(--text-muted);
-      margin-bottom: 12px;
+      margin-bottom: 8px;
+    }
+
+    .tv-scroll-controls {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .tv-scroll-btn {
+      flex: 1;
+      background: #1f2937;
+      border: 1px solid var(--border);
+      color: #93c5fd;
+      padding: 8px 12px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: background 0.15s;
+    }
+
+    .tv-scroll-btn:hover {
+      background: #374151;
+      color: #fff;
     }
 
     .station-list {
       display: flex;
       flex-direction: column;
-      gap: 10px;
-      margin-bottom: 24px;
-      max-height: 280px;
+      gap: 8px;
+      margin-bottom: 8px;
+      max-height: 250px;
       overflow-y: auto;
+      scroll-behavior: smooth;
       padding-right: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+      padding: 6px;
+      background: rgba(0, 0, 0, 0.2);
     }
 
     .station-item {
@@ -214,7 +265,7 @@
       background: rgba(59, 130, 246, 0.15);
     }
 
-    .station-item:hover {
+    .station-item:hover, .station-item:focus {
       background: #374151;
     }
 
@@ -257,8 +308,8 @@
     .input-group {
       display: flex;
       flex-direction: column;
-      gap: 6px;
-      margin-bottom: 12px;
+      gap: 4px;
+      margin-bottom: 10px;
     }
 
     .input-group label {
@@ -273,6 +324,7 @@
       padding: 8px 12px;
       border-radius: 6px;
       outline: none;
+      font-size: 0.9rem;
     }
 
     .input-group input:focus, .input-group select:focus {
@@ -312,6 +364,7 @@
       justify-content: center;
       align-items: center;
       z-index: 100;
+      padding: 20px;
     }
   </style>
 </head>
@@ -320,7 +373,7 @@
   <div id="stage">
     <canvas id="visualizer-canvas"></canvas>
 
-    <button id="remote-btn-toggle" onclick="toggleRemote()">
+    <button id="remote-btn-toggle" onclick="toggleRemote()" tabindex="0">
       <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
       Remote Control
     </button>
@@ -344,37 +397,43 @@
   <div id="remote-drawer">
     <div class="remote-header">
       <h3>Remote Management</h3>
-      <button class="btn btn-secondary" style="padding: 4px 8px;" onclick="toggleRemote()">✕</button>
+      <button class="btn btn-secondary" style="padding: 4px 10px;" onclick="toggleRemote()" tabindex="0">✕</button>
     </div>
 
     <div class="remote-content">
       <div class="remote-section-title">Schedule Timetable</div>
-      <div class="station-list" id="remote-station-list"></div>
+      
+      <div class="tv-scroll-controls">
+        <button type="button" class="tv-scroll-btn" onclick="scrollScheduleList(-1)" tabindex="0">▲ Scroll Up</button>
+        <button type="button" class="tv-scroll-btn" onclick="scrollScheduleList(1)" tabindex="0">▼ Scroll Down</button>
+      </div>
 
-      <div class="remote-section-title" id="form-heading">Add New Station</div>
+      <div class="station-list" id="remote-station-list" tabindex="0"></div>
+
+      <div class="remote-section-title" id="form-heading" style="margin-top: 14px;">Add New Station</div>
       <form id="station-form" onsubmit="handleFormSubmit(event)">
         <input type="hidden" id="edit-index" value="-1" />
         
         <div class="form-row">
           <div class="input-group" style="flex:1;">
             <label>Start (HH:mm)</label>
-            <input type="text" id="inp-start" placeholder="08:00" required pattern="([01]?[0-9]|2[0-3]):[0-5][0-9]" />
+            <input type="text" id="inp-start" placeholder="08:00" required pattern="([01]?[0-9]|2[0-3]):[0-5][0-9]" tabindex="0" />
           </div>
           <div class="input-group" style="flex:1;">
             <label>End (HH:mm)</label>
-            <input type="text" id="inp-end" placeholder="12:00" required pattern="([01]?[0-9]|2[0-3]):[0-5][0-9]" />
+            <input type="text" id="inp-end" placeholder="12:00" required pattern="([01]?[0-9]|2[0-3]):[0-5][0-9]" tabindex="0" />
           </div>
         </div>
 
         <div class="input-group">
           <label>Station Name</label>
-          <input type="text" id="inp-title" placeholder="e.g. AIR Vividh Bharati" required />
+          <input type="text" id="inp-title" placeholder="e.g. AIR Vividh Bharati" required tabindex="0" />
         </div>
 
         <div class="form-row">
           <div class="input-group" style="flex:1;">
             <label>Category</label>
-            <select id="inp-category">
+            <select id="inp-category" tabindex="0">
               <option value="News">News</option>
               <option value="Learning">Learning & Talks</option>
               <option value="Entertainment">Entertainment & Music</option>
@@ -382,61 +441,80 @@
           </div>
           <div class="input-group" style="flex:1;">
             <label>Language</label>
-            <input type="text" id="inp-lang" placeholder="e.g. Telugu / English" />
+            <input type="text" id="inp-lang" placeholder="e.g. Telugu / English" tabindex="0" />
           </div>
         </div>
 
         <div class="input-group">
           <label>Stream URL (.mp3, .aac, .m3u8)</label>
-          <input type="url" id="inp-url" placeholder="https://..." required />
+          <input type="url" id="inp-url" placeholder="https://..." required tabindex="0" />
         </div>
 
         <div style="display:flex; gap: 8px; margin-top: 14px;">
-          <button type="submit" id="submit-btn" class="btn btn-primary" style="flex:1;">Add to Schedule</button>
-          <button type="button" id="cancel-edit-btn" class="btn btn-cancel" style="display:none;" onclick="cancelEditing()">Cancel</button>
-          <button type="button" class="btn btn-secondary" onclick="syncWithGoogleSheet()">Sync Sheet</button>
+          <button type="submit" id="submit-btn" class="btn btn-primary" style="flex:1;" tabindex="0">Add to Schedule</button>
+          <button type="button" id="cancel-edit-btn" class="btn btn-cancel" style="display:none;" onclick="cancelEditing()" tabindex="0">Cancel</button>
+          <button type="button" class="btn btn-secondary" onclick="syncWithGoogleSheet()" tabindex="0">Sync Sheet</button>
         </div>
       </form>
     </div>
   </div>
 
-  <audio id="radio-core" crossorigin="anonymous"></audio>
+  <audio id="radio-core" crossorigin="anonymous" preload="auto"></audio>
 
   <div id="start-overlay">
-    <button class="btn btn-primary" style="padding: 16px 36px; font-size: 1.1rem;" id="init-btn">
+    <button class="btn btn-primary" style="padding: 16px 36px; font-size: 1.1rem;" id="init-btn" tabindex="0">
       Start Autonomous Radio Player
     </button>
   </div>
 
   <script>
-    const CONFIG_APPS_SCRIPT_URL = "hhttps://script.google.com/macros/s/AKfycbwhlbDHvLzEWiJlk71dQvCOrx4BxY4efPolvHoIkgS5zXQZTmyA6PJflIeGOtbCN8Ietw/exec";
+    const CONFIG_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwhlbDHvLzEWiJlk71dQvCOrx4BxY4efPolvHoIkgS5zXQZTmyA6PJflIeGOtbCN8Ietw/exec";
 
-    // 20+ Built-in fallbacks across News, Learning, and Entertainment
+    // 40 Curated Fallbacks (News, Learning, Telugu, Entertainment)
     const DEFAULT_SCHEDULE = [
-      { startTime: "05:00", endTime: "06:00", title: "AIR News 24x7 (India)", category: "News", language: "Hindi/English", url: "https://air.pc.cdn.bitgravity.com/air/live/pcradio/pub/allindianews/playlist.m3u8" },
-      { startTime: "06:00", endTime: "07:00", title: "LBC News London", category: "News", language: "English", url: "https://media-ice.musicradio.com/LBCNewsUKMP3" },
-      { startTime: "07:00", endTime: "08:00", title: "BBC World Service", category: "News", language: "English", url: "https://stream.live.vc.bbcmedia.co.uk/bbc_world_service" },
-      { startTime: "08:00", endTime: "09:00", title: "NPR News 24 Hour", category: "News", language: "English", url: "https://npr-ice.streamguys1.com/live.mp3" },
-      { startTime: "09:00", endTime: "10:00", title: "Bloomberg Radio", category: "News", language: "English", url: "https://bbg-ice.streamguys1.com/live-mp3" },
+      { startTime: "05:00", endTime: "05:30", title: "AIR News 24x7 (India)", category: "News", language: "Hindi/English", url: "https://air.pc.cdn.bitgravity.com/air/live/pcradio/pub/allindianews/playlist.m3u8" },
+      { startTime: "05:30", endTime: "06:00", title: "LBC News London", category: "News", language: "English", url: "https://media-ice.musicradio.com/LBCNewsUKMP3" },
+      { startTime: "06:00", endTime: "06:30", title: "BBC World Service", category: "News", language: "English", url: "https://stream.live.vc.bbcmedia.co.uk/bbc_world_service" },
+      { startTime: "06:30", endTime: "07:00", title: "NPR News 24 Hour", category: "News", language: "English", url: "https://npr-ice.streamguys1.com/live.mp3" },
+      { startTime: "07:00", endTime: "07:30", title: "Bloomberg Radio", category: "News", language: "English", url: "https://bbg-ice.streamguys1.com/live-mp3" },
+      { startTime: "07:30", endTime: "08:00", title: "France 24 English Radio", category: "News", language: "English", url: "https://stream.radiofrance.fr/fip/fip.m3u8" },
+      { startTime: "08:00", endTime: "08:30", title: "CBC Radio One (Canada)", category: "News", language: "English", url: "https://cbcliveradio.akamaized.net/hls/live/2041734/ES_R1OTT/master.m3u8" },
+      { startTime: "08:30", endTime: "09:00", title: "Deutsche Welle Radio", category: "News", language: "English", url: "https://dwstream4-lh.akamaihd.net/i/radio04_en@82542/master.m3u8" },
+      { startTime: "09:00", endTime: "09:30", title: "ABC News Radio (Australia)", category: "News", language: "English", url: "https://live-radio01.mediahubaustralia.com/2LRW/mp3/" },
+      { startTime: "09:30", endTime: "10:00", title: "RTE Radio 1 (Ireland)", category: "News", language: "English", url: "https://icecast2.rte.ie/radio1" },
 
-      { startTime: "10:00", endTime: "11:00", title: "AIR Hyderabad (Telangana)", category: "Entertainment", language: "Telugu", url: "https://air.pc.cdn.bitgravity.com/air/live/pcradio/pub/airtelugu/playlist.m3u8" },
-      { startTime: "11:00", endTime: "12:00", title: "Radio City Telugu", category: "Entertainment", language: "Telugu", url: "https://prclive4.listen2myradio.com/live.mp3?type=s1&mount=/8136" },
-      { startTime: "12:00", endTime: "13:00", title: "Telugu NRI Radio", category: "Entertainment", language: "Telugu", url: "https://stream.zeno.fm/f3wvbbk8v18uv" },
-      { startTime: "13:00", endTime: "14:00", title: "Hungama Telugu Hits", category: "Entertainment", language: "Telugu", url: "https://stream.zeno.fm/2w3x84y12reuv" },
-      { startTime: "14:00", endTime: "15:00", title: "AIR Vividh Bharati", category: "Entertainment", language: "Hindi", url: "https://air.pc.cdn.bitgravity.com/air/live/pcradio/pub/vividhbharati/playlist.m3u8" },
+      { startTime: "10:00", endTime: "10:30", title: "AIR Hyderabad (Telangana)", category: "Entertainment", language: "Telugu", url: "https://air.pc.cdn.bitgravity.com/air/live/pcradio/pub/airtelugu/playlist.m3u8" },
+      { startTime: "10:30", endTime: "11:00", title: "Radio City Telugu", category: "Entertainment", language: "Telugu", url: "https://prclive4.listen2myradio.com/live.mp3?type=s1&mount=/8136" },
+      { startTime: "11:00", endTime: "11:30", title: "Telugu NRI Radio", category: "Entertainment", language: "Telugu", url: "https://stream.zeno.fm/f3wvbbk8v18uv" },
+      { startTime: "11:30", endTime: "12:00", title: "Hungama Telugu Hits", category: "Entertainment", language: "Telugu", url: "https://stream.zeno.fm/2w3x84y12reuv" },
+      { startTime: "12:00", endTime: "12:30", title: "AIR Vijayawada (AP)", category: "Entertainment", language: "Telugu", url: "https://air.pc.cdn.bitgravity.com/air/live/pcradio/pub/airvijayawada/playlist.m3u8" },
+      { startTime: "12:30", endTime: "13:00", title: "AIR Visakhapatnam", category: "Entertainment", language: "Telugu", url: "https://air.pc.cdn.bitgravity.com/air/live/pcradio/pub/airvisakhapatnam/playlist.m3u8" },
+      { startTime: "13:00", endTime: "13:30", title: "AIR Vividh Bharati", category: "Entertainment", language: "Hindi", url: "https://air.pc.cdn.bitgravity.com/air/live/pcradio/pub/vividhbharati/playlist.m3u8" },
+      { startTime: "13:30", endTime: "14:00", title: "Radio Mirchi Top 20", category: "Entertainment", language: "Hindi", url: "https://stream.zeno.fm/0r0xa792kwzuv" },
+      { startTime: "14:00", endTime: "14:30", title: "AIR FM Gold Delhi", category: "Entertainment", language: "Hindi", url: "https://air.pc.cdn.bitgravity.com/air/live/pcradio/pub/fmgold/playlist.m3u8" },
+      { startTime: "14:30", endTime: "15:00", title: "AIR FM Rainbow", category: "Entertainment", language: "Hindi/English", url: "https://air.pc.cdn.bitgravity.com/air/live/pcradio/pub/fmrainbow/playlist.m3u8" },
 
-      { startTime: "15:00", endTime: "16:00", title: "BBC Radio 4 (Science & Arts)", category: "Learning", language: "English", url: "https://stream.live.vc.bbcmedia.co.uk/bbc_radio_fourfm" },
-      { startTime: "16:00", endTime: "17:00", title: "WNYC AM (Podcasts & Debate)", category: "Learning", language: "English", url: "https://fm939.wnyc.org/wnycfm-web" },
-      { startTime: "17:00", endTime: "18:00", title: "KEXP Discovery & Learning", category: "Learning", language: "English", url: "https://kexp.streamguys1.com/kexp160.aac" },
-      { startTime: "18:00", endTime: "19:00", title: "KQED Public Radio Talks", category: "Learning", language: "English", url: "https://streams.kqed.org/kqedradio.mp3" },
+      { startTime: "15:00", endTime: "15:30", title: "BBC Radio 4 (Science & Arts)", category: "Learning", language: "English", url: "https://stream.live.vc.bbcmedia.co.uk/bbc_radio_fourfm" },
+      { startTime: "15:30", endTime: "16:00", title: "WNYC AM (Podcasts & Debate)", category: "Learning", language: "English", url: "https://fm939.wnyc.org/wnycfm-web" },
+      { startTime: "16:00", endTime: "16:30", title: "KQED Public Talks", category: "Learning", language: "English", url: "https://streams.kqed.org/kqedradio.mp3" },
+      { startTime: "16:30", endTime: "17:00", title: "WBUR Public Radio (Boston)", category: "Learning", language: "English", url: "https://wbur-ice.streamguys1.com/wbur_aac" },
+      { startTime: "17:00", endTime: "17:30", title: "KEXP Discovery & Learning", category: "Learning", language: "English", url: "https://kexp.streamguys1.com/kexp160.aac" },
+      { startTime: "17:30", endTime: "18:00", title: "KCRW Eclectic Talks", category: "Learning", language: "English", url: "https://kcrw.streamguys1.com/kcrw_192k_mp3_on_air" },
+      { startTime: "18:00", endTime: "18:30", title: "Radio New Zealand National", category: "Learning", language: "English", url: "https://stream.radionz.co.nz/national.mp3" },
+      { startTime: "18:30", endTime: "19:00", title: "ABC Radio National", category: "Learning", language: "English", url: "https://live-radio01.mediahubaustralia.com/2RNW/mp3/" },
+      { startTime: "19:00", endTime: "19:30", title: "Philosophy & Science Radio", category: "Learning", language: "English", url: "https://ice1.somafm.com/missioncontrol-128-mp3" },
+      { startTime: "19:30", endTime: "20:00", title: "Third Rock Radio (NASA Tech)", category: "Learning", language: "English", url: "https://feed.tunein.com/profiles/p443216/nowPlaying" },
 
-      { startTime: "19:00", endTime: "20:00", title: "Capital FM UK (Hit Music)", category: "Entertainment", language: "English", url: "https://media-ice.musicradio.com/CapitalMP3" },
-      { startTime: "20:00", endTime: "21:00", title: "Heart UK (80s & 90s Hits)", category: "Entertainment", language: "English", url: "https://media-ice.musicradio.com/HeartUKMP3" },
-      { startTime: "21:00", endTime: "22:00", title: "AIR Raagam (Indian Classical)", category: "Entertainment", language: "Carnatic/Hindustani", url: "https://air.pc.cdn.bitgravity.com/air/live/pcradio/pub/airragam/playlist.m3u8" },
-      { startTime: "22:00", endTime: "23:00", title: "Smooth Radio UK", category: "Entertainment", language: "English", url: "https://media-ice.musicradio.com/SmoothUKMP3" },
-      { startTime: "23:00", endTime: "00:00", title: "Classic FM London", category: "Entertainment", language: "English", url: "https://media-ice.musicradio.com/ClassicFMMP3" },
-      { startTime: "00:00", endTime: "02:00", title: "SomaFM Groove Salad", category: "Entertainment", language: "English", url: "https://ice1.somafm.com/groovesalad-128-mp3" },
-      { startTime: "02:00", endTime: "05:00", title: "Jazz24 (Global Standards)", category: "Entertainment", language: "English", url: "https://live.wostreaming.net/manifest/ppm-jazz24aac-ibc1.m3u8" }
+      { startTime: "20:00", endTime: "20:30", title: "Capital FM UK (Hit Music)", category: "Entertainment", language: "English", url: "https://media-ice.musicradio.com/CapitalMP3" },
+      { startTime: "20:30", endTime: "21:00", title: "Heart UK (80s & 90s Hits)", category: "Entertainment", language: "English", url: "https://media-ice.musicradio.com/HeartUKMP3" },
+      { startTime: "21:00", endTime: "21:30", title: "AIR Raagam (Indian Classical)", category: "Entertainment", language: "Carnatic/Hindustani", url: "https://air.pc.cdn.bitgravity.com/air/live/pcradio/pub/airragam/playlist.m3u8" },
+      { startTime: "21:30", endTime: "22:00", title: "Smooth Radio UK", category: "Entertainment", language: "English", url: "https://media-ice.musicradio.com/SmoothUKMP3" },
+      { startTime: "22:00", endTime: "22:30", title: "Classic FM London", category: "Entertainment", language: "English", url: "https://media-ice.musicradio.com/ClassicFMMP3" },
+      { startTime: "22:30", endTime: "23:00", title: "WRTI Classical & Jazz", category: "Entertainment", language: "English", url: "https://wrti-ice.streamguys1.com/wrti-mp3-128" },
+      { startTime: "23:00", endTime: "23:30", title: "SomaFM Groove Salad", category: "Entertainment", language: "English", url: "https://ice1.somafm.com/groovesalad-128-mp3" },
+      { startTime: "23:30", endTime: "00:30", title: "SomaFM Drone Zone", category: "Entertainment", language: "English", url: "https://ice1.somafm.com/dronezone-128-mp3" },
+      { startTime: "00:30", endTime: "02:30", title: "Jazz24 (Global Standards)", category: "Entertainment", language: "English", url: "https://live.wostreaming.net/manifest/ppm-jazz24aac-ibc1.m3u8" },
+      { startTime: "02:30", endTime: "05:00", title: "Swiss Classic Radio", category: "Entertainment", language: "Classical", url: "https://stream.srg-ssr.ch/m/rsc_de/mp3_128" }
     ];
 
     let schedule = [];
@@ -444,6 +522,7 @@
     let manualOverride = false;
     let hlsInstance = null;
     let audioCtx, analyser, dataArray;
+    let wakeLockInstance = null;
 
     const audio = document.getElementById("radio-core");
     const stationTitleEl = document.getElementById("station-title");
@@ -452,7 +531,65 @@
     const remoteDrawer = document.getElementById("remote-drawer");
     const remoteList = document.getElementById("remote-station-list");
 
-    // Visualizer
+    async function requestScreenWakeLock() {
+      try {
+        if ("wakeLock" in navigator && !wakeLockInstance) {
+          wakeLockInstance = await navigator.wakeLock.request("screen");
+          wakeLockInstance.addEventListener("release", () => {
+            wakeLockInstance = null;
+          });
+        }
+      } catch (err) {
+        console.warn("Wake Lock unavailable:", err.message);
+      }
+    }
+
+    document.addEventListener("visibilitychange", async () => {
+      if (document.visibilityState === "visible") {
+        await requestScreenWakeLock();
+      }
+      if (activeChannel && audio.paused) {
+        audio.play().catch(() => {});
+      }
+    });
+
+    function updateMediaSession(station) {
+      if ("mediaSession" in navigator && station) {
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title: station.title,
+          artist: `${station.startTime} - ${station.endTime} | ${station.category || "Radio"}`,
+          album: "Autonomous Live Radio",
+          artwork: [
+            { src: "https://cdn-icons-png.flaticon.com/512/3075/3075908.png", sizes: "512x512", type: "image/png" }
+          ]
+        });
+
+        navigator.mediaSession.setActionHandler("play", () => audio.play().catch(() => {}));
+        navigator.mediaSession.setActionHandler("pause", () => audio.pause());
+        navigator.mediaSession.setActionHandler("stop", () => audio.pause());
+      }
+    }
+
+    function scrollScheduleList(direction) {
+      const scrollStep = 110;
+      remoteList.scrollBy({
+        top: direction * scrollStep,
+        behavior: "smooth"
+      });
+    }
+
+    window.addEventListener("keydown", (e) => {
+      if (document.activeElement === remoteList) {
+        if (e.key === "ArrowUp") {
+          e.preventDefault();
+          scrollScheduleList(-1);
+        } else if (e.key === "ArrowDown") {
+          e.preventDefault();
+          scrollScheduleList(1);
+        }
+      }
+    });
+
     function initVisualizer() {
       const canvas = document.getElementById("visualizer-canvas");
       const ctx = canvas.getContext("2d");
@@ -486,7 +623,7 @@
 
         const cx = canvas.width / 2;
         const cy = canvas.height / 2;
-        const radius = Math.min(cx, cy) * 0.45;
+        const radius = Math.min(cx, cy) * 0.42;
         const bars = dataArray.length;
 
         for (let i = 0; i < bars; i++) {
@@ -499,7 +636,7 @@
           const x2 = cx + Math.cos(rad) * (radius + barHeight);
           const y2 = cy + Math.sin(rad) * (radius + barHeight);
 
-          ctx.strokeStyle = `rgba(59, 130, 246, ${val / 300})`;
+          ctx.strokeStyle = `rgba(59, 130, 246, ${val / 280})`;
           ctx.lineWidth = 3;
           ctx.beginPath();
           ctx.moveTo(x1, y1);
@@ -538,6 +675,9 @@
       stationMetaEl.innerText = `${station.startTime} - ${station.endTime} | ${station.category || "General"} | ${station.language || "English"}`;
       streamStatusEl.innerText = isManual ? "MANUAL OVERRIDE" : "AUTOPILOT SCHEDULER";
 
+      updateMediaSession(station);
+      requestScreenWakeLock();
+
       if (hlsInstance) {
         hlsInstance.destroy();
         hlsInstance = null;
@@ -546,13 +686,13 @@
       audio.removeAttribute("src");
 
       if (station.url.includes(".m3u8") && Hls.isSupported()) {
-        hlsInstance = new Hls();
+        hlsInstance = new Hls({ enableWorker: true, lowLatencyMode: true });
         hlsInstance.loadSource(station.url);
         hlsInstance.attachMedia(audio);
         hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => audio.play().catch(() => {}));
       } else {
         audio.src = station.url;
-        audio.play().catch(e => console.warn("Playback blocked or failed:", e));
+        audio.play().catch(e => console.warn("Playback failed:", e));
       }
 
       renderRemoteList();
@@ -592,22 +732,25 @@
       schedule.forEach((item, index) => {
         const el = document.createElement("div");
         el.className = `station-item ${activeChannel && activeChannel.url === item.url ? "active" : ""}`;
+        el.setAttribute("tabindex", "0");
         el.innerHTML = `
           <div class="station-info" style="flex:1;">
             <h4>${item.title}</h4>
             <span>${item.startTime} - ${item.endTime} • ${item.category || ""} • ${item.language || ""}</span>
           </div>
           <div class="item-actions">
-            <button class="action-btn edit" title="Edit this station" onclick="event.stopPropagation(); startEditing(${index})">✏️</button>
-            <button class="action-btn delete" title="Remove" onclick="event.stopPropagation(); removeStation(${index})">✕</button>
+            <button class="action-btn edit" title="Edit this station" onclick="event.stopPropagation(); startEditing(${index})" tabindex="0">✏</button>
+            <button class="action-btn delete" title="Remove" onclick="event.stopPropagation(); removeStation(${index})" tabindex="0">✕</button>
           </div>
         `;
         el.onclick = () => playStream(item, true);
+        el.onkeydown = (e) => {
+          if (e.key === "Enter") playStream(item, true);
+        };
         remoteList.appendChild(el);
       });
     }
 
-    // Schedule Editing Workflows
     function startEditing(index) {
       const station = schedule[index];
       document.getElementById("edit-index").value = index;
@@ -662,28 +805,43 @@
       renderRemoteList();
     }
 
+    // CORS-safe Syncing to Google Apps Script
     async function syncWithGoogleSheet() {
       try {
         streamStatusEl.innerText = "SAVING TO GOOGLE SHEET...";
-        await fetch(CONFIG_APPS_SCRIPT_URL, {
+        
+        // text/plain avoids CORS preflight OPTIONS rejection in Google Apps Script
+        const res = await fetch(CONFIG_APPS_SCRIPT_URL, {
           method: "POST",
+          headers: {
+            "Content-Type": "text/plain;charset=utf-8"
+          },
           body: JSON.stringify({ channels: schedule })
         });
-        streamStatusEl.innerText = "SHEET UPDATED";
-        setTimeout(evaluateSchedule, 2000);
+        
+        const data = await res.json();
+        if (data.status === "success") {
+          streamStatusEl.innerText = "SHEET UPDATED (" + data.count + " STATIONS)";
+        } else {
+          streamStatusEl.innerText = "SYNC ERROR: " + (data.message || "Unknown");
+        }
+        setTimeout(evaluateSchedule, 3000);
       } catch (err) {
-        alert("Could not sync with Google Apps Script: " + err.message);
+        console.error("Sync error:", err);
+        streamStatusEl.innerText = "SYNC FAILED";
+        alert("Failed to save to Google Sheets: " + err.message);
       }
     }
 
-    // App Bootstrapping
     document.getElementById("init-btn").addEventListener("click", async () => {
       document.getElementById("start-overlay").style.display = "none";
 
       const elem = document.documentElement;
       if (elem.requestFullscreen) elem.requestFullscreen().catch(() => {});
 
+      await requestScreenWakeLock();
       initVisualizer();
+      
       if (audioCtx && audioCtx.state === "suspended") {
         await audioCtx.resume();
       }
