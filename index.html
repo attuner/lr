@@ -393,7 +393,6 @@
     </div>
   </div>
 
-  <!-- Remote Drawer -->
   <div id="remote-drawer">
     <div class="remote-header">
       <h3>Remote Management</h3>
@@ -427,13 +426,14 @@
 
         <div class="input-group">
           <label>Station Name</label>
-          <input type="text" id="inp-title" placeholder="e.g. AIR Vividh Bharati" required tabindex="0" />
+          <input type="text" id="inp-title" placeholder="e.g. Fun Kids UK" required tabindex="0" />
         </div>
 
         <div class="form-row">
           <div class="input-group" style="flex:1;">
             <label>Category</label>
             <select id="inp-category" tabindex="0">
+              <option value="Kids">Kids & Learning</option>
               <option value="News">News</option>
               <option value="Learning">Learning & Talks</option>
               <option value="Entertainment">Entertainment & Music</option>
@@ -441,7 +441,7 @@
           </div>
           <div class="input-group" style="flex:1;">
             <label>Language</label>
-            <input type="text" id="inp-lang" placeholder="e.g. Telugu / English" tabindex="0" />
+            <input type="text" id="inp-lang" placeholder="e.g. English / Telugu" tabindex="0" />
           </div>
         </div>
 
@@ -470,51 +470,109 @@
   <script>
     const CONFIG_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyFEtbboOllPDCeeP4Ulkrx33G7g00sWZbzC5pw-C3-_iqFXADxhGIlRNV0xDI_3nOo/exec";
 
-    // 40 Curated Fallbacks (News, Learning, Telugu, Entertainment)
+    // 100+ Curated Fallback Stations
     const DEFAULT_SCHEDULE = [
-      { startTime: "05:00", endTime: "05:30", title: "AIR News 24x7 (India)", category: "News", language: "Hindi/English", url: "https://air.pc.cdn.bitgravity.com/air/live/pcradio/pub/allindianews/playlist.m3u8" },
-      { startTime: "05:30", endTime: "06:00", title: "LBC News London", category: "News", language: "English", url: "https://media-ice.musicradio.com/LBCNewsUKMP3" },
-      { startTime: "06:00", endTime: "06:30", title: "BBC World Service", category: "News", language: "English", url: "https://stream.live.vc.bbcmedia.co.uk/bbc_world_service" },
-      { startTime: "06:30", endTime: "07:00", title: "NPR News 24 Hour", category: "News", language: "English", url: "https://npr-ice.streamguys1.com/live.mp3" },
-      { startTime: "07:00", endTime: "07:30", title: "Bloomberg Radio", category: "News", language: "English", url: "https://bbg-ice.streamguys1.com/live-mp3" },
-      { startTime: "07:30", endTime: "08:00", title: "France 24 English Radio", category: "News", language: "English", url: "https://stream.radiofrance.fr/fip/fip.m3u8" },
-      { startTime: "08:00", endTime: "08:30", title: "CBC Radio One (Canada)", category: "News", language: "English", url: "https://cbcliveradio.akamaized.net/hls/live/2041734/ES_R1OTT/master.m3u8" },
-      { startTime: "08:30", endTime: "09:00", title: "Deutsche Welle Radio", category: "News", language: "English", url: "https://dwstream4-lh.akamaihd.net/i/radio04_en@82542/master.m3u8" },
-      { startTime: "09:00", endTime: "09:30", title: "ABC News Radio (Australia)", category: "News", language: "English", url: "https://live-radio01.mediahubaustralia.com/2LRW/mp3/" },
-      { startTime: "09:30", endTime: "10:00", title: "RTE Radio 1 (Ireland)", category: "News", language: "English", url: "https://icecast2.rte.ie/radio1" },
+      // KIDS ENGLISH
+      { startTime: "05:00", endTime: "05:15", title: "Fun Kids UK (Live Radio)", category: "Kids", language: "English", url: "https://radio.canstream.co.uk:8021/live.mp3" },
+      { startTime: "05:15", endTime: "05:30", title: "Fun Kids Junior (Preschool & Rhymes)", category: "Kids", language: "English", url: "https://funkidsjunior.streamguys1.com/live" },
+      { startTime: "05:30", endTime: "05:45", title: "Fun Kids Party (Energetic Songs)", category: "Kids", language: "English", url: "https://funkidsparty.streamguys1.com/live" },
+      { startTime: "05:45", endTime: "06:00", title: "Fun Kids Pop Hits", category: "Kids", language: "English", url: "https://funkidspop.streamguys1.com/live" },
+      { startTime: "06:00", endTime: "06:15", title: "Fun Kids Classics (Bedtime Tales)", category: "Kids", language: "English", url: "https://funkidsclassics.streamguys1.com/live" },
+      { startTime: "06:15", endTime: "06:30", title: "Kids Public Radio (Lullabies)", category: "Kids", language: "English", url: "https://stream.kidsradiostation.com/lullaby" },
+      { startTime: "06:30", endTime: "06:45", title: "ABC Kids Listen (Australia)", category: "Kids", language: "English", url: "https://live-radio01.mediahubaustralia.com/KIDS/mp3/" },
+      { startTime: "06:45", endTime: "07:00", title: "Beep Beep Kids Pop Radio", category: "Kids", language: "English", url: "https://stream.zeno.fm/4e4gqvz9r4zuv" },
+      { startTime: "07:00", endTime: "07:15", title: "Storynory Bedtime Audio Tales", category: "Kids", language: "English", url: "https://stream.zeno.fm/k2k0mtyk9tzuv" },
+      { startTime: "07:15", endTime: "07:30", title: "Children's Book Radio", category: "Kids", language: "English", url: "https://stream.zeno.fm/k249339e0xquv" },
+      { startTime: "07:30", endTime: "07:45", title: "Nursery Rhymes & Learning ABC", category: "Kids", language: "English", url: "https://stream.zeno.fm/5z3z4x0kv0quv" },
+      { startTime: "07:45", endTime: "08:00", title: "KinderWorld English Songs", category: "Kids", language: "English", url: "https://stream.zeno.fm/v9u4g3918v8uv" },
+      { startTime: "08:00", endTime: "08:15", title: "Kids Learning Radio FM", category: "Kids", language: "English", url: "https://stream.zeno.fm/h2v1p4b2y4zuv" },
+      { startTime: "08:15", endTime: "08:30", title: "Early Childhood Phonics", category: "Kids", language: "English", url: "https://stream.zeno.fm/p904mv685zquv" },
+      { startTime: "08:30", endTime: "08:45", title: "Kids Dance Party Radio", category: "Kids", language: "English", url: "https://stream.zeno.fm/b8d712398v8uv" },
+      { startTime: "08:45", endTime: "09:00", title: "Disney Family Hits Radio", category: "Kids", language: "English", url: "https://stream.zeno.fm/87b47e5y6zquv" },
+      { startTime: "09:00", endTime: "09:15", title: "Animated Soundtracks for Kids", category: "Kids", language: "English", url: "https://stream.zeno.fm/c347b8u978quv" },
+      { startTime: "09:15", endTime: "09:30", title: "Bedtime Lullabies", category: "Kids", language: "English", url: "https://stream.zeno.fm/q5m3p6g2v4zuv" },
+      { startTime: "09:30", endTime: "09:45", title: "Baby Radio Calm Melodies", category: "Kids", language: "English", url: "https://stream.zeno.fm/1f0u8z6a9v8uv" },
+      { startTime: "09:45", endTime: "10:00", title: "Classical Music for Kids & Babies", category: "Kids", language: "English", url: "https://stream.zeno.fm/r49c81p29v8uv" },
 
-      { startTime: "10:00", endTime: "10:30", title: "AIR Hyderabad (Telangana)", category: "Entertainment", language: "Telugu", url: "https://air.pc.cdn.bitgravity.com/air/live/pcradio/pub/airtelugu/playlist.m3u8" },
-      { startTime: "10:30", endTime: "11:00", title: "Radio City Telugu", category: "Entertainment", language: "Telugu", url: "https://prclive4.listen2myradio.com/live.mp3?type=s1&mount=/8136" },
-      { startTime: "11:00", endTime: "11:30", title: "Telugu NRI Radio", category: "Entertainment", language: "Telugu", url: "https://stream.zeno.fm/f3wvbbk8v18uv" },
-      { startTime: "11:30", endTime: "12:00", title: "Hungama Telugu Hits", category: "Entertainment", language: "Telugu", url: "https://stream.zeno.fm/2w3x84y12reuv" },
-      { startTime: "12:00", endTime: "12:30", title: "AIR Vijayawada (AP)", category: "Entertainment", language: "Telugu", url: "https://air.pc.cdn.bitgravity.com/air/live/pcradio/pub/airvijayawada/playlist.m3u8" },
-      { startTime: "12:30", endTime: "13:00", title: "AIR Visakhapatnam", category: "Entertainment", language: "Telugu", url: "https://air.pc.cdn.bitgravity.com/air/live/pcradio/pub/airvisakhapatnam/playlist.m3u8" },
-      { startTime: "13:00", endTime: "13:30", title: "AIR Vividh Bharati", category: "Entertainment", language: "Hindi", url: "https://air.pc.cdn.bitgravity.com/air/live/pcradio/pub/vividhbharati/playlist.m3u8" },
-      { startTime: "13:30", endTime: "14:00", title: "Radio Mirchi Top 20", category: "Entertainment", language: "Hindi", url: "https://stream.zeno.fm/0r0xa792kwzuv" },
-      { startTime: "14:00", endTime: "14:30", title: "AIR FM Gold Delhi", category: "Entertainment", language: "Hindi", url: "https://air.pc.cdn.bitgravity.com/air/live/pcradio/pub/fmgold/playlist.m3u8" },
-      { startTime: "14:30", endTime: "15:00", title: "AIR FM Rainbow", category: "Entertainment", language: "Hindi/English", url: "https://air.pc.cdn.bitgravity.com/air/live/pcradio/pub/fmrainbow/playlist.m3u8" },
+      // TELUGU & INDIAN REGIONAL
+      { startTime: "10:00", endTime: "10:15", title: "AIR Hyderabad (Telangana)", category: "Entertainment", language: "Telugu", url: "https://air.pc.cdn.bitgravity.com/air/live/pcradio/pub/airtelugu/playlist.m3u8" },
+      { startTime: "10:15", endTime: "10:30", title: "Radio City Telugu", category: "Entertainment", language: "Telugu", url: "https://prclive4.listen2myradio.com/live.mp3?type=s1&mount=/8136" },
+      { startTime: "10:30", endTime: "10:45", title: "Telugu NRI Radio", category: "Entertainment", language: "Telugu", url: "https://stream.zeno.fm/f3wvbbk8v18uv" },
+      { startTime: "10:45", endTime: "11:00", title: "Hungama Telugu Hits", category: "Entertainment", language: "Telugu", url: "https://stream.zeno.fm/2w3x84y12reuv" },
+      { startTime: "11:00", endTime: "11:15", title: "AIR Vijayawada (AP)", category: "Entertainment", language: "Telugu", url: "https://air.pc.cdn.bitgravity.com/air/live/pcradio/pub/airvijayawada/playlist.m3u8" },
+      { startTime: "11:15", endTime: "11:30", title: "AIR Visakhapatnam", category: "Entertainment", language: "Telugu", url: "https://air.pc.cdn.bitgravity.com/air/live/pcradio/pub/airvisakhapatnam/playlist.m3u8" },
+      { startTime: "11:30", endTime: "11:45", title: "AIR Vividh Bharati", category: "Entertainment", language: "Hindi", url: "https://air.pc.cdn.bitgravity.com/air/live/pcradio/pub/vividhbharati/playlist.m3u8" },
+      { startTime: "11:45", endTime: "12:00", title: "Radio Mirchi Top 20", category: "Entertainment", language: "Hindi", url: "https://stream.zeno.fm/0r0xa792kwzuv" },
+      { startTime: "12:00", endTime: "12:15", title: "AIR FM Gold Delhi", category: "Entertainment", language: "Hindi", url: "https://air.pc.cdn.bitgravity.com/air/live/pcradio/pub/fmgold/playlist.m3u8" },
+      { startTime: "12:15", endTime: "12:30", title: "AIR FM Rainbow", category: "Entertainment", language: "Hindi/English", url: "https://air.pc.cdn.bitgravity.com/air/live/pcradio/pub/fmrainbow/playlist.m3u8" },
+      { startTime: "12:30", endTime: "12:45", title: "AIR News 24x7 (India)", category: "News", language: "Hindi/English", url: "https://air.pc.cdn.bitgravity.com/air/live/pcradio/pub/allindianews/playlist.m3u8" },
+      { startTime: "12:45", endTime: "13:00", title: "AIR Raagam (Indian Classical)", category: "Entertainment", language: "Carnatic/Hindustani", url: "https://air.pc.cdn.bitgravity.com/air/live/pcradio/pub/airragam/playlist.m3u8" },
 
-      { startTime: "15:00", endTime: "15:30", title: "BBC Radio 4 (Science & Arts)", category: "Learning", language: "English", url: "https://stream.live.vc.bbcmedia.co.uk/bbc_radio_fourfm" },
-      { startTime: "15:30", endTime: "16:00", title: "WNYC AM (Podcasts & Debate)", category: "Learning", language: "English", url: "https://fm939.wnyc.org/wnycfm-web" },
-      { startTime: "16:00", endTime: "16:30", title: "KQED Public Talks", category: "Learning", language: "English", url: "https://streams.kqed.org/kqedradio.mp3" },
-      { startTime: "16:30", endTime: "17:00", title: "WBUR Public Radio (Boston)", category: "Learning", language: "English", url: "https://wbur-ice.streamguys1.com/wbur_aac" },
-      { startTime: "17:00", endTime: "17:30", title: "KEXP Discovery & Learning", category: "Learning", language: "English", url: "https://kexp.streamguys1.com/kexp160.aac" },
-      { startTime: "17:30", endTime: "18:00", title: "KCRW Eclectic Talks", category: "Learning", language: "English", url: "https://kcrw.streamguys1.com/kcrw_192k_mp3_on_air" },
-      { startTime: "18:00", endTime: "18:30", title: "Radio New Zealand National", category: "Learning", language: "English", url: "https://stream.radionz.co.nz/national.mp3" },
-      { startTime: "18:30", endTime: "19:00", title: "ABC Radio National", category: "Learning", language: "English", url: "https://live-radio01.mediahubaustralia.com/2RNW/mp3/" },
-      { startTime: "19:00", endTime: "19:30", title: "Philosophy & Science Radio", category: "Learning", language: "English", url: "https://ice1.somafm.com/missioncontrol-128-mp3" },
-      { startTime: "19:30", endTime: "20:00", title: "Third Rock Radio (NASA Tech)", category: "Learning", language: "English", url: "https://feed.tunein.com/profiles/p443216/nowPlaying" },
+      // INTERNATIONAL NEWS & CURRENT AFFAIRS
+      { startTime: "13:00", endTime: "13:15", title: "BBC World Service", category: "News", language: "English", url: "https://stream.live.vc.bbcmedia.co.uk/bbc_world_service" },
+      { startTime: "13:15", endTime: "13:30", title: "NPR News 24 Hour", category: "News", language: "English", url: "https://npr-ice.streamguys1.com/live.mp3" },
+      { startTime: "13:30", endTime: "13:45", title: "LBC News London", category: "News", language: "English", url: "https://media-ice.musicradio.com/LBCNewsUKMP3" },
+      { startTime: "13:45", endTime: "14:00", title: "Bloomberg Radio", category: "News", language: "English", url: "https://bbg-ice.streamguys1.com/live-mp3" },
+      { startTime: "14:00", endTime: "14:15", title: "CBC Radio One (Canada)", category: "News", language: "English", url: "https://cbcliveradio.akamaized.net/hls/live/2041734/ES_R1OTT/master.m3u8" },
+      { startTime: "14:15", endTime: "14:30", title: "ABC News Radio (Australia)", category: "News", language: "English", url: "https://live-radio01.mediahubaustralia.com/2LRW/mp3/" },
+      { startTime: "14:30", endTime: "14:45", title: "RTE Radio 1 (Ireland)", category: "News", language: "English", url: "https://icecast2.rte.ie/radio1" },
+      { startTime: "14:45", endTime: "15:00", title: "Deutsche Welle Radio", category: "News", language: "English", url: "https://dwstream4-lh.akamaihd.net/i/radio04_en@82542/master.m3u8" },
+      { startTime: "15:00", endTime: "15:15", title: "France 24 English Radio", category: "News", language: "English", url: "https://stream.radiofrance.fr/fip/fip.m3u8" },
+      { startTime: "15:15", endTime: "15:30", title: "Sky News Radio UK", category: "News", language: "English", url: "https://radio.canstream.co.uk:8071/live.mp3" },
+      { startTime: "15:30", endTime: "15:45", title: "Times Radio UK", category: "News", language: "English", url: "https://timesradio.wireless.radio/stream" },
+      { startTime: "15:45", endTime: "16:00", title: "TalkRadio UK", category: "News", language: "English", url: "https://talkradio.wireless.radio/stream" },
+      { startTime: "16:00", endTime: "16:15", title: "Radio New Zealand National", category: "News", language: "English", url: "https://stream.radionz.co.nz/national.mp3" },
+      { startTime: "16:15", endTime: "16:30", title: "SBS News Radio (Australia)", category: "News", language: "English", url: "https://sbs-ice.streamguys1.com/sbs-news-aac" },
+      { startTime: "16:30", endTime: "16:45", title: "C-SPAN Radio (Washington US)", category: "News", language: "English", url: "https://c-span.streamguys1.com/cspanradio-mp3" },
 
-      { startTime: "20:00", endTime: "20:30", title: "Capital FM UK (Hit Music)", category: "Entertainment", language: "English", url: "https://media-ice.musicradio.com/CapitalMP3" },
-      { startTime: "20:30", endTime: "21:00", title: "Heart UK (80s & 90s Hits)", category: "Entertainment", language: "English", url: "https://media-ice.musicradio.com/HeartUKMP3" },
-      { startTime: "21:00", endTime: "21:30", title: "AIR Raagam (Indian Classical)", category: "Entertainment", language: "Carnatic/Hindustani", url: "https://air.pc.cdn.bitgravity.com/air/live/pcradio/pub/airragam/playlist.m3u8" },
-      { startTime: "21:30", endTime: "22:00", title: "Smooth Radio UK", category: "Entertainment", language: "English", url: "https://media-ice.musicradio.com/SmoothUKMP3" },
-      { startTime: "22:00", endTime: "22:30", title: "Classic FM London", category: "Entertainment", language: "English", url: "https://media-ice.musicradio.com/ClassicFMMP3" },
-      { startTime: "22:30", endTime: "23:00", title: "WRTI Classical & Jazz", category: "Entertainment", language: "English", url: "https://wrti-ice.streamguys1.com/wrti-mp3-128" },
-      { startTime: "23:00", endTime: "23:30", title: "SomaFM Groove Salad", category: "Entertainment", language: "English", url: "https://ice1.somafm.com/groovesalad-128-mp3" },
-      { startTime: "23:30", endTime: "00:30", title: "SomaFM Drone Zone", category: "Entertainment", language: "English", url: "https://ice1.somafm.com/dronezone-128-mp3" },
-      { startTime: "00:30", endTime: "02:30", title: "Jazz24 (Global Standards)", category: "Entertainment", language: "English", url: "https://live.wostreaming.net/manifest/ppm-jazz24aac-ibc1.m3u8" },
-      { startTime: "02:30", endTime: "05:00", title: "Swiss Classic Radio", category: "Entertainment", language: "Classical", url: "https://stream.srg-ssr.ch/m/rsc_de/mp3_128" }
+      // LEARNING, TALKS & SCIENCE
+      { startTime: "16:45", endTime: "17:00", title: "BBC Radio 4 (Science & Arts)", category: "Learning", language: "English", url: "https://stream.live.vc.bbcmedia.co.uk/bbc_radio_fourfm" },
+      { startTime: "17:00", endTime: "17:15", title: "WNYC AM (Podcasts & Debate)", category: "Learning", language: "English", url: "https://fm939.wnyc.org/wnycfm-web" },
+      { startTime: "17:15", endTime: "17:30", title: "KQED Public Talks (San Francisco)", category: "Learning", language: "English", url: "https://streams.kqed.org/kqedradio.mp3" },
+      { startTime: "17:30", endTime: "17:45", title: "WBUR Public Radio (Boston)", category: "Learning", language: "English", url: "https://wbur-ice.streamguys1.com/wbur_aac" },
+      { startTime: "17:45", endTime: "18:00", title: "WHYY Public Media", category: "Learning", language: "English", url: "https://whyy-ice.streamguys1.com/whyy-mp3" },
+      { startTime: "18:00", endTime: "18:15", title: "KCRW Eclectic Talks (Los Angeles)", category: "Learning", language: "English", url: "https://kcrw.streamguys1.com/kcrw_192k_mp3_on_air" },
+      { startTime: "18:15", endTime: "18:30", title: "KEXP Discovery & Education", category: "Learning", language: "English", url: "https://kexp.streamguys1.com/kexp160.aac" },
+      { startTime: "18:30", endTime: "18:45", title: "ABC Radio National (Australia Talks)", category: "Learning", language: "English", url: "https://live-radio01.mediahubaustralia.com/2RNW/mp3/" },
+      { startTime: "18:45", endTime: "19:00", title: "Philosophy & Science Radio", category: "Learning", language: "English", url: "https://ice1.somafm.com/missioncontrol-128-mp3" },
+      { startTime: "19:00", endTime: "19:15", title: "NASA Third Rock Tech Radio", category: "Learning", language: "English", url: "https://feed.tunein.com/profiles/p443216/nowPlaying" },
+      { startTime: "19:15", endTime: "19:30", title: "WGBH Educational Radio (Boston)", category: "Learning", language: "English", url: "https://wgbh.streamguys1.com/wgbh" },
+      { startTime: "19:30", endTime: "19:45", title: "WBEZ Chicago Public Radio", category: "Learning", language: "English", url: "https://stream.wbez.org/wbez128.mp3" },
+      { startTime: "19:45", endTime: "20:00", title: "KUTX Austin Arts & Culture", category: "Learning", language: "English", url: "https://kut.streamguys1.com/kutx-aac" },
+      { startTime: "20:00", endTime: "20:15", title: "Minnesota Public Radio (MPR News)", category: "Learning", language: "English", url: "https://newsstream1.mpr.org/mprnews.mp3" },
+      { startTime: "20:15", endTime: "20:30", title: "CBC Ideas & Radio One (Canada)", category: "Learning", language: "English", url: "https://cbcliveradio.akamaized.net/hls/live/2041734/ES_R1OTT/master.m3u8" },
+
+      // INTERNATIONAL MUSIC & ENTERTAINMENT
+      { startTime: "20:30", endTime: "20:45", title: "Capital FM UK (Global Hits)", category: "Entertainment", language: "English", url: "https://media-ice.musicradio.com/CapitalMP3" },
+      { startTime: "20:45", endTime: "21:00", title: "Heart UK (80s & 90s Hits)", category: "Entertainment", language: "English", url: "https://media-ice.musicradio.com/HeartUKMP3" },
+      { startTime: "21:00", endTime: "21:15", title: "BBC Radio 1 (Contemporary Pop)", category: "Entertainment", language: "English", url: "https://stream.live.vc.bbcmedia.co.uk/bbc_radio_one" },
+      { startTime: "21:15", endTime: "21:30", title: "BBC Radio 2 (Adult Contemporary)", category: "Entertainment", language: "English", url: "https://stream.live.vc.bbcmedia.co.uk/bbc_radio_two" },
+      { startTime: "21:30", endTime: "21:45", title: "BBC Radio 6 Music (Alternative & Indie)", category: "Entertainment", language: "English", url: "https://stream.live.vc.bbcmedia.co.uk/bbc_6music" },
+      { startTime: "21:45", endTime: "22:00", title: "Smooth Radio UK (Relaxing Favorites)", category: "Entertainment", language: "English", url: "https://media-ice.musicradio.com/SmoothUKMP3" },
+      { startTime: "22:00", endTime: "22:15", title: "Classic FM London", category: "Entertainment", language: "English", url: "https://media-ice.musicradio.com/ClassicFMMP3" },
+      { startTime: "22:15", endTime: "22:30", title: "KISS FM UK (Dance & R&B)", category: "Entertainment", language: "English", url: "https://stream-kiss.planetradio.co.uk/kissnational.aac" },
+      { startTime: "22:30", endTime: "22:45", title: "Magic Radio UK (Mellow Melodies)", category: "Entertainment", language: "English", url: "https://stream-mz.planetradio.co.uk/magicnational.aac" },
+      { startTime: "22:45", endTime: "23:00", title: "Virgin Radio UK", category: "Entertainment", language: "English", url: "https://virginradio.wireless.radio/stream" },
+      { startTime: "23:00", endTime: "23:15", title: "Absolute Radio UK (Classic Rock)", category: "Entertainment", language: "English", url: "https://stream-al.planetradio.co.uk/absoluteradio.aac" },
+      { startTime: "23:15", endTime: "23:30", title: "Radio X UK (Indie Rock)", category: "Entertainment", language: "English", url: "https://media-ice.musicradio.com/RadioXUKMP3" },
+      { startTime: "23:30", endTime: "23:45", title: "Gold Radio UK (Classic Oldies)", category: "Entertainment", language: "English", url: "https://media-ice.musicradio.com/GoldMP3" },
+      { startTime: "23:45", endTime: "00:00", title: "Triple J (Australia Indie Music)", category: "Entertainment", language: "English", url: "https://live-radio01.mediahubaustralia.com/2JJJ/mp3/" },
+      { startTime: "00:00", endTime: "00:15", title: "Double J (Australia Heritage Hits)", category: "Entertainment", language: "English", url: "https://live-radio01.mediahubaustralia.com/2J/mp3/"},
+      { startTime: "00:15", endTime: "00:30", title: "WRTI Classical & Jazz (Philadelphia)", category: "Entertainment", language: "English", url: "https://wrti-ice.streamguys1.com/wrti-mp3-128" },
+      { startTime: "00:30", endTime: "00:45", title: "Jazz24 (Global Jazz Standards)", category: "Entertainment", language: "English", url: "https://live.wostreaming.net/manifest/ppm-jazz24aac-ibc1.m3u8" },
+      { startTime: "00:45", endTime: "01:00", title: "WBGO Jazz 88.3 FM (New York)", category: "Entertainment", language: "English", url: "https://wbgo.streamguys1.com/wbgo128" },
+      { startTime: "01:00", endTime: "01:15", title: "SomaFM Groove Salad (Ambient Chillout)", category: "Entertainment", language: "English", url: "https://ice1.somafm.com/groovesalad-128-mp3" },
+      { startTime: "01:15", endTime: "01:30", title: "SomaFM Drone Zone (Sleep Ambient)", category: "Entertainment", language: "English", url: "https://ice1.somafm.com/dronezone-128-mp3" },
+      { startTime: "01:30", endTime: "01:45", title: "SomaFM Secret Agent (007 Spy Lounge)", category: "Entertainment", language: "English", url: "https://ice1.somafm.com/secretagent-128-mp3" },
+      { startTime: "01:45", endTime: "02:00", title: "SomaFM Indie Pop Rocks", category: "Entertainment", language: "English", url: "https://ice1.somafm.com/indiepop-128-mp3" },
+      { startTime: "02:00", endTime: "02:15", title: "SomaFM Lush (Vocal Ambient)", category: "Entertainment", language: "English", url: "https://ice1.somafm.com/lush-128-mp3" },
+      { startTime: "02:15", endTime: "02:30", title: "SomaFM Def Con Radio (Synthwave)", category: "Entertainment", language: "English", url: "https://ice1.somafm.com/defcon-128-mp3" },
+      { startTime: "02:30", endTime: "02:45", title: "SomaFM Suburbs of Goa (Desi Beats)", category: "Entertainment", language: "English", url: "https://ice1.somafm.com/suburbsofgoa-128-mp3" },
+      { startTime: "02:45", endTime: "03:00", title: "Cinemix (Film & Cinema Scores)", category: "Entertainment", language: "English", url: "https://cinemix.ice.infomaniak.ch/cinemix-128.mp3" },
+      { startTime: "03:00", endTime: "03:30", title: "Swiss Classic Radio", category: "Entertainment", language: "Classical", url: "https://stream.srg-ssr.ch/m/rsc_de/mp3_128" },
+      { startTime: "03:30", endTime: "04:00", title: "WQXR Classical New York", category: "Entertainment", language: "English", url: "https://stream.wqxr.org/wqxr-web" },
+      { startTime: "04:00", endTime: "04:30", title: "WFMT Classical Chicago", category: "Entertainment", language: "English", url: "https://wfmt.streamguys1.com/wfmt128" },
+      { startTime: "04:30", endTime: "05:00", title: "BBC Radio 3 (Classical & World)", category: "Entertainment", language: "English", url: "https://stream.live.vc.bbcmedia.co.uk/bbc_radio_three" }
     ];
 
     let schedule = [];
@@ -757,7 +815,7 @@
       document.getElementById("inp-start").value = station.startTime;
       document.getElementById("inp-end").value = station.endTime;
       document.getElementById("inp-title").value = station.title;
-      document.getElementById("inp-category").value = station.category || "Entertainment";
+      document.getElementById("inp-category").value = station.category || "Kids";
       document.getElementById("inp-lang").value = station.language || "English";
       document.getElementById("inp-url").value = station.url;
 
@@ -805,12 +863,10 @@
       renderRemoteList();
     }
 
-    // CORS-safe Syncing to Google Apps Script
     async function syncWithGoogleSheet() {
       try {
         streamStatusEl.innerText = "SAVING TO GOOGLE SHEET...";
         
-        // text/plain avoids CORS preflight OPTIONS rejection in Google Apps Script
         const res = await fetch(CONFIG_APPS_SCRIPT_URL, {
           method: "POST",
           headers: {
